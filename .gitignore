@@ -1,2 +1,4 @@
 TOKEN.py
-
+venv/
+__pycache__/
+.idea/
