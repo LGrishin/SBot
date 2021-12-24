@@ -1,1 +1,1 @@
-pytelegrambotapi
+pytelegrambotapi numpy matplotlib
