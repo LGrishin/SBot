@@ -1,0 +1,2 @@
+TOKEN = ''
+WINDY_API_KEY = ''
