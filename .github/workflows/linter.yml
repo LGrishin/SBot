@@ -1,4 +1,4 @@
-name: PyLint Runner
+name: CI
 
 on: [push]
 
@@ -9,17 +9,21 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+
     - name: Set up Python 3.7
       uses: actions/setup-python@v1
       with:
         python-version: 3.7
+
     - name: Install Requirements
       run: |
         python -m pip install --upgrade pip
         pip install pylint
-        pip install pyTelegramBotAPI
-        pip install matplotlib
-        pip install numpy
+
     - name: Run Pylint
       run: |
         pylint main.py
+        pylint tests/first_test.py
+
+    - name: Testing code
+      run:  python3 tests/first_test.py
