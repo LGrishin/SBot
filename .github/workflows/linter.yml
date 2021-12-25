@@ -29,5 +29,5 @@ jobs:
         pylint main.py
         pylint tests/first_test.py
 
-    - name: Testing code
+    - name: Testing the code
       run:  python3 tests/first_test.py
