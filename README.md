@@ -8,4 +8,6 @@
 
 Файл config.py должен содержать API-ключ windy и токен для бота
 
-бот в телеге - @WeatherWindyBot,
+бот в телеге - @WeatherWindyBot
+
+С наступающим!
