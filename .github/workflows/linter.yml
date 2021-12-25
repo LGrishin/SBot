@@ -1,4 +1,4 @@
-name: PyLint Runner
+name: CI
 
 on: [push]
 
