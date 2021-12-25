@@ -2,11 +2,11 @@ name: CD
 
 
 on:
-  [ release ]
-
   push:
     tags:
       - 'v*'
+  release:
+  
 
 jobs:
 
