@@ -22,4 +22,4 @@ jobs:
         pip install numpy
     - name: Run Pylint
       run: |
-        python main.py --path ./src --threshold 2
+        pylint main.py
