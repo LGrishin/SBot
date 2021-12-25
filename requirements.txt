@@ -1,3 +1,4 @@
 pytelegrambotapi
-numpy
-matplotlib
+numpy~=1.21.5
+matplotlib~=3.5.1
+requests~=2.22.0

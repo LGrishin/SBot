@@ -1,15 +1,18 @@
-import telebot
-import requests
+"""Main"""
+
 from datetime import datetime
+from telebot import TeleBot
+from requests import post
 import numpy as np
 import matplotlib.pyplot as plt
 from config import TOKEN, WINDY_API_KEY
 
-bot = telebot.TeleBot(TOKEN)
+bot = TeleBot(TOKEN)
 
 
 @bot.message_handler(commands=['start'])  # /start
 def welcome(message):
+    """Welcome  message"""
     bot.send_message(message.chat.id,
                      "Привет! Отправь мне свою геолокацию для получения данных о погоде! "
                      "Если хочешь узнать больше, используй /help")
@@ -17,21 +20,27 @@ def welcome(message):
 
 @bot.message_handler(commands=['help'])  # /help
 def help_inf(message):
+    """Help message"""
     bot.send_message(message.chat.id,
-                     "Данный бот позволяет получить информацию о погодных условиях для твоей геолокации."
+                     "Данный бот позволяет получить информацию о погодных"
+                     "условиях для твоей геолокации."
                      "Данные предоставляются в формате [время, температура, осадки, "
                      "скорость "
-                     "ветра, направление ветра]. Так же прилагаются графики динамики температуры и осадков.\n"
+                     "ветра, направление ветра]. Так же прилагаются графики"
+                     "динамики температуры и осадков.\n"
                      "Чтобы получить данные, просто "
-                     "отправь отправь боту свою геолокацию. Информация о погоде получена с сайта windy.com")
+                     "отправь отправь боту свою геолокацию. Информация о погоде"
+                     "получена с сайта windy.com")
 
 
 @bot.message_handler(content_types=['text'])  # любой текст
 def lalala(message):
+    """Help message 2"""
     bot.send_message(message.chat.id, "Чтобы получить данные о погоде, отправь свою геолокацию.")
 
 
 def get_data_from_windy(loc):  # отправка запроса в windy.com через API
+    """Get data for location"""
     data = {"lat": loc[1],
             "lon": loc[0],
             "model": "gfs",
@@ -40,30 +49,34 @@ def get_data_from_windy(loc):  # отправка запроса в windy.com ч
             "key": WINDY_API_KEY
             }
     header = {"Content-Type": "application/json"}
-    s = requests.post("https://api.windy.com/api/point-forecast/v2", json=data, headers=header)
-    return s
+    result = post("https://api.windy.com/api/point-forecast/v2", json=data, headers=header)
+    return result
 
 
 def data_processing(data):  # Обработка полученных данных
+    """Data processing"""
     weather_values = data.json()
-    weather_values['ts'] = [int(i / 1000) + 25200 for i in weather_values['ts']]  # преобразование времени из ms в s
+    # преобразование времени из ms в s
+    weather_values['ts'] = [int(i / 1000) + 25200 for i in weather_values['ts']]
+    # преобразование температуры из K в °C
     weather_values['temp-surface'] = [int(i - 273.15) for i in
-                                      weather_values['temp-surface']]  # преобразование температуры из K в °C
+                                      weather_values['temp-surface']]
     weather_values['wind_u-surface'] = np.array(weather_values['wind_u-surface'])
     weather_values['wind_v-surface'] = np.array(weather_values['wind_v-surface'])
     return weather_values
 
 
 def answer(weather_values):
+    """prepare answer"""
     wind_direction = []
     for i in range(weather_values['wind_u-surface'].size):  # Определение направления ветра
         if weather_values['wind_u-surface'][i] >= 0 and weather_values['wind_v-surface'][i] >= 0:
             wind_direction.append('ЮЗ')  # юго-западный
-        if weather_values['wind_u-surface'][i] < 0 and weather_values['wind_v-surface'][i] >= 0:
+        elif weather_values['wind_u-surface'][i] < 0 <= weather_values['wind_v-surface'][i]:
             wind_direction.append('ЮВ')  # юго-восточный
-        if weather_values['wind_u-surface'][i] >= 0 and weather_values['wind_v-surface'][i] < 0:
+        elif weather_values['wind_v-surface'][i] < 0 <= weather_values['wind_u-surface'][i]:
             wind_direction.append('СЗ')  # северо-западный
-        if weather_values['wind_u-surface'][i] < 0 and weather_values['wind_v-surface'][i] < 0:
+        elif weather_values['wind_u-surface'][i] < 0 and weather_values['wind_v-surface'][i] < 0:
             wind_direction.append('СВ')  # северо-восточный
 
     wind_u = np.power(weather_values['wind_u-surface'], 2)
@@ -77,7 +90,8 @@ def answer(weather_values):
 
     text = 'Погода на ближайшие сутки:\n\n'
     plot_time = np.array(time[:8])
-    temp_surface = np.array(weather_values['temp-surface'][:8])  # заготовки для построения графиков
+    # заготовки для построения графиков
+    temp_surface = np.array(weather_values['temp-surface'][:8])
     precip_surface = np.array(weather_values['past3hprecip-surface'][:8])
 
     for i in range(9):  # формирование ответа
@@ -96,16 +110,20 @@ def answer(weather_values):
 
 
 def send_image(chat_id):  # отправляем фотки пользователю
-    bot.send_photo(chat_id, photo=open('temperature_dynamics.png', 'rb'),
-                   caption="Динамика температуры")
-    bot.send_photo(chat_id, photo=open('Precipitation_dynamics.png', 'rb'),
-                   caption="Динамика осадков")
+    """Send images"""
+    with open('temperature_dynamics.png', 'rb') as photo_1:
+        bot.send_photo(chat_id, photo=photo_1, caption="Динамика температуры")
+
+    with open('Precipitation_dynamics.png', 'rb') as photo_2:
+        bot.send_photo(chat_id, photo=photo_2, caption="Динамика осадков")
 
 
 @bot.message_handler(content_types=['location'])
 def location(message):
+    """prepare location"""
     if message.location is not None:
-        loc = [message.location.longitude, message.location.latitude]  # получаем координаты из геолокации
+        # получаем координаты из геолокации
+        loc = [message.location.longitude, message.location.latitude]
         data = get_data_from_windy(loc)  # отправляем API запрос для данных координат
         weather_values = data_processing(data)  # обрабатываем данные и приводим к удобному виду
         text = answer(weather_values)  # формируем ответ пользователю
@@ -114,4 +132,3 @@ def location(message):
 
 
 bot.polling(none_stop=True)
-
