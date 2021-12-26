@@ -17,7 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/CI@master
+      - uses: .gtihub/workflows/linter@master
+
       - name: Check Out Repo 
         uses: actions/checkout@v2
 
